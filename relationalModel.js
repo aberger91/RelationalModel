@@ -1,11 +1,31 @@
 
 var RelationalModel = (() => function() {
 
+    function isBoyceCoddForm(arrayOfFuncDeps, attrs) {
+        var superkeys = getAllSuperKeys(arrayOfFuncDeps, attrs);
+        var primarykey = getPrimaryKey(arrayOfFuncDeps, attrs);
+        for (let f of arrayOfFuncDeps) {
+            if (!containsAttri(superkeys, f.lhs))
+                return false; 
+        }
+        return true;
+    }
+
+    function isThirdNormalForm(arrayOfFuncDeps, attrs) {
+        var superkeys = getAllSuperKeys(arrayOfFuncDeps, attrs);
+        var primarykey = getPrimaryKey(arrayOfFuncDeps, attrs);
+        for (let f of arrayOfFuncDeps) {
+            if (!containsAttri(superkeys, f.lhs))
+                return false; 
+            if (!containsAttr(primarykey.split(), f.rhs))
+                return false
+        }
+        return true;
+    }
+
     function getPrimaryKey(arrayOfFuncDeps, attrs) {
         var superkeys = getAllSuperKeys(arrayOfFuncDeps, attrs);
-        console.log(superkeys)
         superkeys = superkeys.sort(function (a, b) {return a.length - b.length});
-        console.log(superkeys)
         return superkeys[0];
     }
 
@@ -13,30 +33,10 @@ var RelationalModel = (() => function() {
         var combs = combinations(attrs.split());
         var superkeys = [];
         for (let c of combs) {
-            var closure = find_closure(c, arrayOfFuncDeps);
-            if (closure.equals(attrs)) {
+            if (is_superkey(c, arrayOfFuncDeps, attrs))
                 superkeys.push(c);
-            }
         }
         return superkeys;
-    }
-
-    function combinations(listOfAttrs) {
-        var set = []
-        var length = listOfAttrs.length;
-        var n_combinations = (1<<length);
-        var combination;
-        for (var x=1; x<n_combinations; x++) {
-            var combs = [];
-            for (var y=0; y<length; y++) {
-                if ((x & (1 << y))) {
-                    combs.push(listOfAttrs[y]);
-                }
-            }
-            combs = convertArrayOfAttributesToAttributeSet(combs);
-            set.push(combs);
-        }
-        return set;
     }
 
     function is_superkey(attr, arrayOfFuncDeps, attrs) {
@@ -62,12 +62,38 @@ var RelationalModel = (() => function() {
         return attr;
     }
 
+    function combinations(listOfAttrs) {
+        var set = []
+        var length = listOfAttrs.length;
+        var n_combinations = (1<<length);
+        var combination;
+        for (var x=1; x<n_combinations; x++) {
+            var combs = [];
+            for (var y=0; y<length; y++) {
+                if ((x & (1 << y))) {
+                    combs.push(listOfAttrs[y]);
+                }
+            }
+            combs = convertArrayOfAttributesToAttributeSet(combs);
+            set.push(combs);
+        }
+        return set;
+    }
+
     function convertArrayOfAttributesToAttributeSet(listOfAttrs) {
         var attr = new Attribute(listOfAttrs[0].val);
         for (var x=1; x<listOfAttrs.length; x++) {
             attr = attr.addAttri(listOfAttrs[x]);
         }
         return attr;
+    }
+
+    function containsAttri(listOfAttrs, attr) {
+        for (let a of listOfAttrs) {
+            if (a.equals(attr))
+                return true;
+        }
+        return false
     }
 
     class Attribute {
@@ -108,6 +134,9 @@ var RelationalModel = (() => function() {
         equals(attr) {
             if (attr.length != this.length) return false;
             return attr.val == this.val;
+        }
+        split() {
+            return [this];
         }
     };
 
@@ -198,11 +227,13 @@ var RelationalModel = (() => function() {
         FuncDep: FuncDep,
         find_closure: find_closure,
         is_superkey: is_superkey,
-        combinations: combinations,
-        convertArrayOfAttributesToAttributeSet: convertArrayOfAttributesToAttributeSet,
         getAllSuperKeys: getAllSuperKeys,
-        getPrimaryKey: getPrimaryKey
+        getPrimaryKey: getPrimaryKey,
+        isThirdNormalForm: isThirdNormalForm,
+        isBoyceCoddForm: isBoyceCoddForm
     };
 
 })()();
+
+let rm = RelationalModel;
 
