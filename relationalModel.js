@@ -338,3 +338,5 @@ tests.run();
 //f_2 = new rm.FuncDep(ab, c)
 //f_3 = new rm.FuncDep(ac, d) //console.log(rm.isThirdNormalForm([f_1, f_2, f_3], new rm.AttributeSet(a, b, c, d)))
 
+let rm = RelationalModel;
+
