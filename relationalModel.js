@@ -28,6 +28,13 @@ var RelationalModel = (() => function() {
         return superkeys[0];
     }
 
+    function getCandidateKeys(arrayOfFuncDeps, attrs) {
+        let superkeys = getAllSuperKeys(arrayOfFuncDeps, attrs);
+        let minimumBasis = superkeys.sort(function (a, b) {return a.length-b.length})[0].length;
+        let candidates = superkeys.map(function(a) {return a == minimumBasis});
+        return candidates;
+    }
+
     function getAllSuperKeys(arrayOfFuncDeps, attrs) {
         var combs = combinations(attrs.split());
         var superkeys = [];
@@ -99,7 +106,7 @@ var RelationalModel = (() => function() {
             this.length = 1;
         }
         addAttri(attr) {
-            if (attr.length > 1)
+            if (attr.length > 1) // AttributeSet
             {
                 if (attr.contains(this))
                 {
@@ -108,7 +115,7 @@ var RelationalModel = (() => function() {
                 }
                 return new AttributeSet(new Attribute(this.val), ...attr._attrs);
             }
-            else
+            else // Attribute
             {
                 if (this.val == '')
                     return new Attribute(attr.val);
@@ -148,7 +155,7 @@ var RelationalModel = (() => function() {
         }
         addAttri(attr) {
             var newAttrs = this.iter();
-            if (attr.length > 1)
+            if (attr.length > 1) // AttributeSet
             {
                 for (let a of attr.iter())
                 {
@@ -156,7 +163,7 @@ var RelationalModel = (() => function() {
                         newAttrs.push(a);
                 }
             }
-            else
+            else // Attribute
             {
                 if (!this.contains(attr))
                     newAttrs.push(attr);
@@ -233,6 +240,7 @@ var RelationalModel = (() => function() {
         find_closure: find_closure,
         is_superkey: is_superkey,
         getAllSuperKeys: getAllSuperKeys,
+        getCandidateKeys: getCandidateKeys
         getPrimaryKey: getPrimaryKey,
         isThirdNormalForm: isThirdNormalForm,
         isBoyceCoddForm: isBoyceCoddForm
