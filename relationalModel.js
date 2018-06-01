@@ -44,27 +44,18 @@ var RelationalModel = (() => function() {
     }
 
     function find_closure(attr, arrayOfFuncDeps) {
-        console.log('arrayOfFuncDeps', arrayOfFuncDeps);
         for (let a of attr.iter())
         {
             for (let funcDep of arrayOfFuncDeps) {
-                console.log('funcDep', funcDep);
                 if (funcDep.rhs.isSubsetOf(attr)) 
                     continue
                 if (funcDep.lhs.isSubsetOf(attr) || a.isSubsetOf(funcDep.lhs))
                 {
-                    //attr = attr.addAttri(
-                    console.log('rhs', funcDep.rhs);
                     attr = attr.addAttri(funcDep.rhs);
-                    //find_closure(attr, arrayOfFuncDeps);
-                    //attr = find_closure(
-                    //  attr.addAttri(funcDep.rhs), 
-                    //  arrayOfFuncDeps
-                    //)
+                    attr = find_closure(attr, arrayOfFuncDeps);
                 }
             }
         }
-        console.log('return from closure', attr);
         return attr;
     }
 
@@ -110,23 +101,19 @@ var RelationalModel = (() => function() {
         addAttri(attr) {
             if (attr.length > 1)
             {
-                var newAttrs = attr.iter();
-                if (!attr.contains(this))
+                if (attr.contains(this))
                 {
-                    console.log('pushing', attr);
-                    newAttrs.push(attr);
+                    let result = new AttributeSet(...attr._attrs);
+                    return result;
                 }
-                let result = new AttributeSet(...newAttrs);
-                console.log('returning new attribute set from attribute', result);
-                return result;
+                return new AttributeSet(new Attribute(this.val), ...attr._attrs);
             }
             else
             {
-                console.log('returning new attribute from attribute', attr);
                 if (this.val == '')
                     return new Attribute(attr.val);
                 if (this.val != attr.val)
-                    return new AttributeSet(this, attr);
+                    return new AttributeSet(new Attribute(this.val), attr);
                 return new Attribute(this.val);
             }
         }
@@ -143,14 +130,14 @@ var RelationalModel = (() => function() {
             return this.val.toString();
         }
         iter() {
-            return [this]; 
+            return [new Attribute(this.val)]; 
         }
         equals(attr) {
             if (attr.length != this.length) return false;
             return attr.val == this.val;
         }
         split() {
-            return [this];
+            return [new Attribute(this.val)];
         }
     };
 
@@ -175,7 +162,6 @@ var RelationalModel = (() => function() {
                     newAttrs.push(attr);
             }
             let result = new AttributeSet(...newAttrs);
-            console.log('returning new attribute set from attribute set', result);
             return result;
         }
         print() {
@@ -253,88 +239,6 @@ var RelationalModel = (() => function() {
     };
 
 })()();
-
-var Tests = (() => function () {
-    function run() {
-        var rm = RelationalModel;
-        var a = new rm.Attribute('A');
-        var b = new rm.Attribute('B');
-        console.log('b', b)
-        var c = new rm.Attribute('C');
-        console.log('c', c)
-        var bc = new rm.AttributeSet(b, c);
-        console.log('bc', bc)
-        var d = new rm.Attribute('D');
-        var e = new rm.Attribute('E');
-        var f = new rm.Attribute('F');
-        var g = new rm.Attribute('G');
-        var h = new rm.Attribute('H');
-        var i = new rm.Attribute('I');
-        var ab = new rm.AttributeSet(a, b);
-        var abc = new rm.AttributeSet(a, b, c);
-        var dc = new rm.AttributeSet(d, c);
-        var be = new rm.AttributeSet(b, e);
-        var ci = new rm.AttributeSet(c, i);
-        var ef = e.addAttri(f);
-        var efg = ef.addAttri(g);
-        var hi = new rm.AttributeSet(h, i);
-        var efghi = ef.addAttri(hi);
-        var f_1 = new rm.FuncDep(a, bc);
-        console.log('f_1', f_1)
-        //var f_2 = new rm.FuncDep(b, c);
-        //var f_3 = new rm.FuncDep(d, g);
-        //var f_4 = new rm.FuncDep(g, ci);
-        //f_1.print();
-        //f_2.print();
-        //f_3.print();
-        //f_4.print();
-        //var attrs = rm.find_closure(a, [f_1, f_2, f_3, f_4])//, f_bc, f_cd]);
-        //console.log('closure of A in above: ');
-        //attrs.print();
-        //var attrs = rm.find_closure(a, [f_1, f_2])//, f_bc, f_cd]);
-        //console.log('closure of A in A-->B,C; B-->C; : ');
-        //attrs.print();
-        //attrs = rm.find_closure(a, [new rm.FuncDep(ab, c), new rm.FuncDep(c, d)])//, f_bc, f_cd]);
-        ////console.log('closure of A in A,B-->C; C-->D; : ');
-        //attrs.print();
-        //attrs = rm.find_closure(a, [new rm.FuncDep(a, b), new rm.FuncDep(f, g)])//, f_bc, f_cd]);
-        ////console.log('closure of A in A-->B; F-->G; : ');
-        //attrs.print();
-        //attrs = rm.find_closure(a, [new rm.FuncDep(ab, dc), new rm.FuncDep(d, e)])//, f_bc, f_cd]);
-        //console.log('closure of A in A,B-->D,C; D-->E; : ');
-        //attrs.print();
-        ////console.log(rm.is_superkey(a, [f_1, f_2, f_3, f_4], new rm.AttributeSet(a, b, c, d, e, g, i)))
-    }
-    return {
-        run: run
-    }
-})();
-
-let tests = Tests();
-tests.run();
-
-//let rm = RelationalModel;
-//var a = new rm.Attribute('A');
-//var b = new rm.Attribute('B');
-//var c = new rm.Attribute('C');
-//var d = new rm.Attribute('D');
-//var e = new rm.Attribute('E');
-//var f = new rm.Attribute('F');
-//var g = new rm.Attribute('G');
-//var h = new rm.Attribute('H');
-//var i = new rm.Attribute('I');
-//var ab = new rm.AttributeSet(a, b);
-//var bc = new rm.AttributeSet(b, c);
-//console.log('bc', bc);
-//var ac = a.addAttri(c)
-//var ef = e.addAttri(f);
-//var efg = ef.addAttri(g);
-//var hi = new rm.AttributeSet(h, i);
-//var efghi = ef.addAttri(hi);
-//
-//f_1 = new rm.FuncDep(ab, b)
-//f_2 = new rm.FuncDep(ab, c)
-//f_3 = new rm.FuncDep(ac, d) //console.log(rm.isThirdNormalForm([f_1, f_2, f_3], new rm.AttributeSet(a, b, c, d)))
 
 let rm = RelationalModel;
 
