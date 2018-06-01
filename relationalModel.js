@@ -55,6 +55,8 @@ var RelationalModel = (() => function() {
                 {
                     //attr = attr.addAttri(
                     console.log('rhs', funcDep.rhs);
+                    attr = attr.addAttri(funcDep.rhs);
+                    //find_closure(attr, arrayOfFuncDeps);
                     //attr = find_closure(
                     //  attr.addAttri(funcDep.rhs), 
                     //  arrayOfFuncDeps
@@ -119,11 +121,14 @@ var RelationalModel = (() => function() {
                 return result;
             }
             else
+            {
+                console.log('returning new attribute from attribute', attr);
                 if (this.val == '')
                     return new Attribute(attr.val);
                 if (this.val != attr.val)
                     return new AttributeSet(this, attr);
                 return new Attribute(this.val);
+            }
         }
         print() {
             console.log('A('+this.val+')');
@@ -147,14 +152,11 @@ var RelationalModel = (() => function() {
         split() {
             return [this];
         }
-        slice(n) {
-            return new Attribute(this.val);
-        }
     };
 
     class AttributeSet {
-        constructor(...args) {
-            this._attrs = args;
+        constructor(args) {
+            this._attrs = [...arguments];
             this.length = this._attrs.length;
         }
         addAttri(attr) {
@@ -219,9 +221,6 @@ var RelationalModel = (() => function() {
                 msg += c;
             return msg;
         }
-        slice(n) {
-            return new AttributeSet(...this._attrs.slice(n));
-        }
         split() {
             var arr = new Array();
             for (let a of this.attrs)
@@ -232,9 +231,8 @@ var RelationalModel = (() => function() {
 
     class FuncDep {
         constructor(lhs, rhs) {
-            console.log('init lhs', lhs, 'init rhs', rhs)
-            this.lhs = lhs.slice(0);
-            this.rhs = rhs.slice(0);
+            this.lhs = lhs
+            this.rhs = rhs
         };
         print() {
             var msg = this.lhs.toString() + ' -> ' + this.rhs.toString();
@@ -282,20 +280,20 @@ var Tests = (() => function () {
         var hi = new rm.AttributeSet(h, i);
         var efghi = ef.addAttri(hi);
         var f_1 = new rm.FuncDep(a, bc);
-        var f_2 = new rm.FuncDep(b, c);
-        var f_3 = new rm.FuncDep(d, g);
-        var f_4 = new rm.FuncDep(g, ci);
-        f_1.print();
-        f_2.print();
-        f_3.print();
-        f_4.print();
+        console.log('f_1', f_1)
+        //var f_2 = new rm.FuncDep(b, c);
+        //var f_3 = new rm.FuncDep(d, g);
+        //var f_4 = new rm.FuncDep(g, ci);
+        //f_1.print();
+        //f_2.print();
+        //f_3.print();
+        //f_4.print();
         //var attrs = rm.find_closure(a, [f_1, f_2, f_3, f_4])//, f_bc, f_cd]);
         //console.log('closure of A in above: ');
         //attrs.print();
-        console.log('bc', bc)
-        var attrs = rm.find_closure(a, [f_1, f_2])//, f_bc, f_cd]);
-        console.log('closure of A in A-->B,C; B-->C; : ');
-        attrs.print();
+        //var attrs = rm.find_closure(a, [f_1, f_2])//, f_bc, f_cd]);
+        //console.log('closure of A in A-->B,C; B-->C; : ');
+        //attrs.print();
         //attrs = rm.find_closure(a, [new rm.FuncDep(ab, c), new rm.FuncDep(c, d)])//, f_bc, f_cd]);
         ////console.log('closure of A in A,B-->C; C-->D; : ');
         //attrs.print();
