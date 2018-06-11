@@ -2,18 +2,17 @@
 var RelationalModel = (() => function() {
 
     function isBoyceCoddForm(arrayOfFuncDeps, attrs) {
-        var superkeys = getAllSuperKeys(arrayOfFuncDeps, attrs);
-        var primarykey = getPrimaryKey(arrayOfFuncDeps, attrs);
+        let superkeys = getAllSuperKeys(arrayOfFuncDeps, attrs);
         for (let f of arrayOfFuncDeps) {
-            if (!containsAttri(superkeys, f.lhs))
+            if (!containsAttr(superkeys, f.lhs))
                 return false; 
         }
         return true;
     }
 
     function isThirdNormalForm(arrayOfFuncDeps, attrs) {
-        var superkeys = getAllSuperKeys(arrayOfFuncDeps, attrs);
-        var primarykey = getPrimaryKey(arrayOfFuncDeps, attrs);
+        let superkeys = getAllSuperKeys(arrayOfFuncDeps, attrs);
+        let primarykey = getPrimaryKey(arrayOfFuncDeps, attrs);
         for (let f of arrayOfFuncDeps) {
             if (!containsAttr(superkeys, f.lhs) && 
                 (!containsAttr(primarykey.split(), f.rhs)))
@@ -23,30 +22,36 @@ var RelationalModel = (() => function() {
     }
 
     function getPrimaryKey(arrayOfFuncDeps, attrs) {
-        var superkeys = getAllSuperKeys(arrayOfFuncDeps, attrs);
+        let superkeys = getAllSuperKeys(arrayOfFuncDeps, attrs);
         superkeys = superkeys.sort(function (a, b) {return a.length - b.length});
         return superkeys[0];
     }
 
     function getCandidateKeys(arrayOfFuncDeps, attrs) {
         let superkeys = getAllSuperKeys(arrayOfFuncDeps, attrs);
-        let minimumBasis = superkeys.sort(function (a, b) {return a.length-b.length})[0].length;
-        let candidates = superkeys.map(function(a) {return a == minimumBasis});
+        let minimumBasis = superkeys.sort(function (a, b) {return a.length-b.length})[0].getLength();
+        let candidates = [ ];//superkeys.map(function(a) {return a == minimumBasis});
+        for (let key of superkeys) {
+            if (key.getLength() == minimumBasis)
+                candidates.push(key);
+        }
         return candidates;
     }
 
     function getAllSuperKeys(arrayOfFuncDeps, attrs) {
-        var combs = combinations(attrs.split());
-        var superkeys = [];
+        let combs = combinations(attrs.split());
+        let superkeys = [];
         for (let c of combs) {
             if (is_superkey(c, arrayOfFuncDeps, attrs))
+            {
                 superkeys.push(c);
+            }
         }
         return superkeys;
     }
 
     function is_superkey(attr, arrayOfFuncDeps, attrs) {
-        var closure = find_closure(attr, arrayOfFuncDeps);
+        let closure = find_closure(attr, arrayOfFuncDeps);
         return (closure.equals(attrs))
     }
 
@@ -67,13 +72,13 @@ var RelationalModel = (() => function() {
     }
 
     function combinations(listOfAttrs) {
-        var set = []
-        var length = listOfAttrs.length;
-        var n_combinations = (1<<length);
-        var combination;
-        for (var x=1; x<n_combinations; x++) {
-            var combs = [];
-            for (var y=0; y<length; y++) {
+        let set = []
+        let length = listOfAttrs.length;
+        let n_combinations = (1<<length);
+        let combination;
+        for (let x=1; x<n_combinations; x++) {
+            let combs = [];
+            for (let y=0; y<length; y++) {
                 if ((x & (1 << y))) {
                     combs.push(listOfAttrs[y]);
                 }
@@ -85,8 +90,8 @@ var RelationalModel = (() => function() {
     }
 
     function convertArrayOfAttributesToAttributeSet(listOfAttrs) {
-        var attr = new Attribute(listOfAttrs[0].val);
-        for (var x=1; x<listOfAttrs.length; x++) {
+        let attr = new Attribute(listOfAttrs[0].val);
+        for (let x=1; x<listOfAttrs.length; x++) {
             attr = attr.addAttri(listOfAttrs[x]);
         }
         return attr;
@@ -103,10 +108,10 @@ var RelationalModel = (() => function() {
     class Attribute {
         constructor(val) {
             this.val = val;
-            this.length = 1;
+            this._length = 1;
         }
         addAttri(attr) {
-            if (attr.length > 1) // AttributeSet
+            if (attr.getLength() > 1) // AttributeSet
             {
                 if (attr.contains(this))
                 {
@@ -125,7 +130,8 @@ var RelationalModel = (() => function() {
             }
         }
         print() {
-            console.log('A('+this.val+')');
+            console.log(this.toString());
+            return this.toString();
         }
         isSubsetOf(attr) {
             return attr.contains(this);
@@ -134,28 +140,38 @@ var RelationalModel = (() => function() {
             return this.val == attr.val;
         }
         toString() {
-            return this.val.toString();
+            return this.val.toString().toUpperCase();
         }
         iter() {
             return [new Attribute(this.val)]; 
         }
         equals(attr) {
-            if (attr.length != this.length) return false;
+            if (attr.getLength() != this._length) return false;
             return attr.val == this.val;
         }
         split() {
             return [new Attribute(this.val)];
+        }
+        clear() {
+            this.val = '';
+            return new Attribute('');
+        }
+        getLength() {
+            return this._length;
         }
     };
 
     class AttributeSet {
         constructor(args) {
             this._attrs = [...arguments];
-            this.length = this._attrs.length;
+            this._length = this._attrs.length;
+        }
+        getLength() {
+            return this._attrs.length;
         }
         addAttri(attr) {
-            var newAttrs = this.iter();
-            if (attr.length > 1) // AttributeSet
+            let newAttrs = this.iter();
+            if (attr.getLength() > 1) // AttributeSet
             {
                 for (let a of attr.iter())
                 {
@@ -172,24 +188,25 @@ var RelationalModel = (() => function() {
             return result;
         }
         print() {
-            var msg = 'ASet(';
+            let msg = '';
             for (let attr of this._attrs) {
-                msg += attr.val
+                msg += attr.toString();
             }
-            msg += ')';
             console.log(msg);
+            return msg;
         }
         iter() {
             return this._attrs;
         }
         _getVals() {
-            return this.attrs.map(function(x) {return x.val});
+            return this._attrs.map(function(x) {return x.val});
         }
         equals(attr) {
-            if (attr.length != this.length) return false;
-            var arr = attr._getVals().sort();
-            var this_arr = this._getVals().sort();
-            for (var x=0; x<this.length; x++)
+            let length = this.getLength();
+            if (attr.getLength() != length) return false;
+            let arr = attr._getVals().sort();
+            let this_arr = this._getVals().sort();
+            for (let x=0; x<length; x++)
             {
                 if (arr[x] != this_arr[x]) return false;
             }
@@ -209,16 +226,24 @@ var RelationalModel = (() => function() {
             return true;
         }
         toString() {
-            var msg = '';
+            let msg = '';
             for (let c of this._attrs)
-                msg += c;
+                msg += c.toString().toUpperCase();
             return msg;
         }
         split() {
-            var arr = new Array();
-            for (let a of this.attrs)
+            let arr = new Array();
+            for (let a of this._attrs)
                 arr.push(a);
             return arr;
+        }
+        clear() {
+            for (let x of this._attrs)
+                x = new Attribute('');
+            return new AttributeSet();
+        }
+        push(attr) {
+            this.addAttri(attr);
         }
     };
 
@@ -228,8 +253,9 @@ var RelationalModel = (() => function() {
             this.rhs = rhs
         };
         print() {
-            var msg = this.lhs.toString() + ' -> ' + this.rhs.toString();
+            let msg = this.lhs.toString() + ' --> ' + this.rhs.toString();
             console.log(msg);
+            return msg;
         }
     };
 
@@ -240,7 +266,7 @@ var RelationalModel = (() => function() {
         find_closure: find_closure,
         is_superkey: is_superkey,
         getAllSuperKeys: getAllSuperKeys,
-        getCandidateKeys: getCandidateKeys
+        getCandidateKeys: getCandidateKeys,
         getPrimaryKey: getPrimaryKey,
         isThirdNormalForm: isThirdNormalForm,
         isBoyceCoddForm: isBoyceCoddForm
@@ -249,4 +275,23 @@ var RelationalModel = (() => function() {
 })()();
 
 let rm = RelationalModel;
+
+let a = new rm.Attribute('A');
+let b = new rm.Attribute('B');
+let c = new rm.Attribute('C');
+let d = new rm.Attribute('D');
+let e = new rm.Attribute('E');
+let f = new rm.Attribute('F');
+let ab = new rm.AttributeSet(a, b);
+let ef = new rm.AttributeSet(e, f);
+
+let f1 = new rm.FuncDep(ab, c);
+let f2 = new rm.FuncDep(c, d);
+let f3 = new rm.FuncDep(d, a);
+
+let closure = rm.find_closure(ab, [f1, f2, f3]);
+console.log(closure);
+
+let boycecodd = rm.isBoyceCoddForm([f1, f2, f3], new rm.AttributeSet(a, b, c, d));
+console.log(boycecodd);
 

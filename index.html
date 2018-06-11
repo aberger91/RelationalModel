@@ -1,9 +1,181 @@
 <html>
+
 <head>
+    <link rel='stylesheet' type='text/css' href='static/css/bootstrap.css'/>
+    <script type='text/javascript' src='relationalModel.js'></script>
 </head>
+
+<style>
+.row { background-color: #dedede; border-radius: 7px; margin: 5% 5% 5% 5%;}
+.btn { margin: 1% 1% 1% 1%;}
+.padding {margin: 1% 1% 1% 1%;}
+.text {font-weight: bold; font-size:16}
+.btn-color1 {color: white; background-color: #543467; border-color: #552344}
+.btn-color2 {color: white; background-color: #f0ad4e; border-color: #eea236}
+.btn-color3 {color: white; background-color: #d9534f; border-color: #d43f3a}
+.btn-color4 {color: white; background-color: #337ab7; border-color: #2e6da4}
+.btn-color5 {color: white; background-color: #5cb85c; border-color: #4cae4c}
+.btn-color6 {color: white; background-color: #112233; border-color: #111111}
+.btn-color7 {color: white; background-color: #ef1234; border-color: #de0123}
+.btn-color8 {color: white; background-color: #12ef34; border-color: #01de23}
+.btn-color9 {color: white; background-color: #1234ef; border-color: #0123de}
+.cont-main {background-color: #efefef}
+.button-area {margin: 3% 3% 3% 3%}
+</style>
+
 <body>
-    <script src='relationalModel.js'>
+
+    <div class='jumbotron container'>
+        <div class='button-area'>
+            <h1 class='text'>
+                JS - Relational Modeling
+            </h1>
+        </div>
+    </div>
+
+    <div class='container cont-main'>
+        <div class='button-area'>
+            <div class='container text'>
+                Enter attributes of the relation in comma-separated format.
+                <br>
+                Express functional dependencies like: A,B --> C; C-->D, E;
+            </div>
+        </div>
+
+        <div class='row'>
+            <div class='button-area'>
+                <div class='text padding'>
+                Attributes
+                    <input id='attributes-all' style='width: 500px' type="text" class="form-control" placeholder="" aria-label="" aria-describedby="basic-addon1">
+                </div>
+            </div>
+        </div>
+
+        <div class='row'>
+            <div class='button-area'>
+                <div class='text padding'>
+                Functional Dependencies
+                    <input id='func-deps-all' style='width: 500px' type="text" class="form-control" placeholder="" aria-label="" aria-describedby="basic-addon1">
+                </div>
+            </div>
+        </div>
+
+        <div class='row'>
+            <div class='button-area'>
+                <button id='validateInput' type='button' class='btn btn-color1 text'> Check Input </button>
+                <button id='createModel' type='button' class='btn btn-color2 text'> Create Model </button>
+            </div>
+        </div>
+
+        <div class='row'>
+            <div class='button-area'>
+                <!--<button id='addAttri' type='button' class='btn btn-primary text'> Create Model </button>-->
+                <button id='checkThirdNormal' type='button' class='btn btn-color3 text'> Third Normal Form </button>
+                <button id='checkBoyceCodd' type='button' class='btn btn-color4 btn-color1 text'> Boyce Codd Normal Form </button>
+                <button id='minimalCover' type='button' class='btn btn-color5 text'> Minimal Cover </button>
+                <button id='superkeys' type='button' class='btn btn-color6 text'> Superkeys </button>
+                <button id='candidatekeys' type='button' class='btn btn-color7 text'> Candidate Keys </button>
+                <button id='primarykey' type='button' class='btn btn-color8 text'> Primary Key </button>
+                <button id='closure' type='button' class='btn btn-color9 text'> Closure </button>
+            </div>
+        </div>
+
+        <div class='row'>
+            <div id='attributes' class='text button-area'>
+            </div>
+        </div>
+        <div class='row'>
+            <div id='attributes-results' class='text button-area'>
+            </div>
+        </div>
+    </div>
+
+    <script type='text/javascript'>
+
+        let attributes = new rm.AttributeSet('');
+        let funcDeps = [ ];
+
+        function createAttributes(str) {
+            let attrs = str.split(','); 
+            let attrSet = new rm.Attribute(attrs[0]);
+            for (let x=0; x<attrs.length; x++) {
+                attrSet = attrSet.addAttri(new rm.Attribute(attrs[x]));
+            }
+            return attrSet;
+        }
+
+        document.getElementById('createModel').addEventListener('click', function () {
+            attributes = attributes.clear();
+            let allAttributes = document.getElementById('attributes-all').value;
+            for (let x=0; x<allAttributes.length; x++) {
+                if (allAttributes[x] != ',')
+                    attributes.push(new rm.Attribute(allAttributes[x]));
+            }
+
+            document.getElementById('attributes').innerHTML = '';
+            document.getElementById('attributes-results').innerHTML = '';
+            funcDeps = [ ];
+            let allFuncDeps = document.getElementById('func-deps-all').value.split(';');
+            for (let x=0; x<allFuncDeps.length; x++) {
+                let expr = allFuncDeps[x].split('-->');
+                if (expr.length != 2) 
+                    continue
+                let determinant = createAttributes(expr[0]);
+                let determinee = createAttributes(expr[1]);
+                let fd = new rm.FuncDep(determinant, determinee);
+                document.getElementById('attributes').innerHTML += fd.print() + '</br>';
+                funcDeps.push(fd);
+            }
+            //document.getElementById('attributes-text').style.display = 'visible';
+        });
+
+        document.getElementById('superkeys').addEventListener('click', function () {
+            document.getElementById('attributes-results').innerHTML = '';
+            let superkeys = rm.getAllSuperKeys(funcDeps, attributes);
+            document.getElementById('attributes-results').innerHTML += 'Superkeys:' + '</br>';
+            for (let x=0; x<superkeys.length; x++) {
+                let attr = superkeys[x];
+                document.getElementById('attributes-results').innerHTML += attr.print() + '</br>';
+            }
+        });
+
+        document.getElementById('candidatekeys').addEventListener('click', function () {
+            document.getElementById('attributes-results').innerHTML = '';
+            let candidatekeys = rm.getCandidateKeys(funcDeps, attributes);
+            document.getElementById('attributes-results').innerHTML += 'Candidates:' + '</br>';
+            for (let x=0; x<candidatekeys.length; x++) {
+                let attr = candidatekeys[x];
+                console.log('candidate:', attr);
+                document.getElementById('attributes-results').innerHTML += attr.print() + '</br>';
+            }
+        });
+
+        document.getElementById('primarykey').addEventListener('click', function () {
+            document.getElementById('attributes-results').innerHTML = '';
+            let primarykey = rm.getPrimaryKey(funcDeps, attributes);
+            document.getElementById('attributes-results').innerHTML += 'Primary Key:' + '</br>';
+            document.getElementById('attributes-results').innerHTML += primarykey.print() + '</br>';
+        });
+
+        document.getElementById('checkThirdNormal').addEventListener('click', function () {
+            document.getElementById('attributes-results').innerHTML = '';
+            let isThirdNormal = rm.isThirdNormalForm(funcDeps, attributes);
+            if (isThirdNormal == true)
+                document.getElementById('attributes-results').innerHTML += 'This relation is in Third Normal Form.' + '</br>';
+            else
+                document.getElementById('attributes-results').innerHTML += 'This relation is not in Third Normal Form.' + '</br>';
+        });
+
+        document.getElementById('checkBoyceCodd').addEventListener('click', function () {
+            document.getElementById('attributes-results').innerHTML = '';
+            let boyceCodd = rm.isBoyceCoddForm(funcDeps, attributes);
+            if (boyceCodd == true)
+                document.getElementById('attributes-results').innerHTML += 'This relation is in Boyce Codd Normal Form.' + '</br>';
+            else
+                document.getElementById('attributes-results').innerHTML += 'This relation is not in Boyce Codd Normal Form.' + '</br>';
+        });
             
     </script>
+
 </body>
 </html>
