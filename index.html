@@ -95,6 +95,20 @@
         let attributes = new rm.AttributeSet('');
         let funcDeps = [ ];
 
+        function removeDuplicatesFromArray(arr) {
+            let result = [ ];
+            for (let x of arr) {
+                let is_dupe = false;
+                for (let y of result) {
+                    if (x.equals(y)) 
+                        is_dupe = true;
+                }
+                if (!is_dupe)
+                    result.push(x);
+            }
+            return result;
+        }
+
         function createAttributes(str) {
             let attrs = str.split(','); 
             let attrSet = new rm.Attribute(attrs[0]);
@@ -132,6 +146,7 @@
         document.getElementById('superkeys').addEventListener('click', function () {
             document.getElementById('attributes-results').innerHTML = '';
             let superkeys = rm.getAllSuperKeys(funcDeps, attributes);
+            superkeys = removeDuplicatesFromArray(superkeys);
             document.getElementById('attributes-results').innerHTML += 'Superkeys:' + '</br>';
             for (let x=0; x<superkeys.length; x++) {
                 let attr = superkeys[x];
@@ -145,7 +160,7 @@
             document.getElementById('attributes-results').innerHTML += 'Candidates:' + '</br>';
             for (let x=0; x<candidatekeys.length; x++) {
                 let attr = candidatekeys[x];
-                console.log('candidate:', attr);
+                //console.log('candidate:', attr);
                 document.getElementById('attributes-results').innerHTML += attr.print() + '</br>';
             }
         });
